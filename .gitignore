@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+data_cache/
+results/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# secrets — never commit
+.env
+*.token.json
+schwab_token.json
