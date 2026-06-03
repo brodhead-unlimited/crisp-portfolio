@@ -1,0 +1,80 @@
+{
+  "strategy": "crisp",
+  "inception": "2026-06-02",
+  "as_of": "2026-06-02",
+  "initial_capital": 100000.0,
+  "value": 99950.0,
+  "rebalances": 1,
+  "last_rebalance": "2026-06-02 00:00:00",
+  "cadence_days": 21,
+  "holdings": [
+    {
+      "ticker": "XLK",
+      "weight": 0.1986
+    },
+    {
+      "ticker": "XLE",
+      "weight": 0.193
+    },
+    {
+      "ticker": "IEF",
+      "weight": 0.1398
+    },
+    {
+      "ticker": "EEM",
+      "weight": 0.1311
+    },
+    {
+      "ticker": "XLV",
+      "weight": 0.0544
+    },
+    {
+      "ticker": "XLI",
+      "weight": 0.0432
+    },
+    {
+      "ticker": "GLD",
+      "weight": 0.0416
+    },
+    {
+      "ticker": "TLT",
+      "weight": 0.0308
+    },
+    {
+      "ticker": "XLU",
+      "weight": 0.0298
+    },
+    {
+      "ticker": "VNQ",
+      "weight": 0.0162
+    },
+    {
+      "ticker": "XLB",
+      "weight": 0.0045
+    },
+    {
+      "ticker": "EFA",
+      "weight": 0.0022
+    },
+    {
+      "ticker": "XLP",
+      "weight": 0.002
+    },
+    {
+      "ticker": "XLY",
+      "weight": -0.0393
+    },
+    {
+      "ticker": "XLF",
+      "weight": -0.0734
+    }
+  ],
+  "equity": {
+    "dates": [
+      "2026-06-02"
+    ],
+    "series": [
+      0.9995
+    ]
+  }
+}

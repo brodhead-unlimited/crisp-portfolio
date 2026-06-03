@@ -1,0 +1,45 @@
+name: Paper trade (daily)
+
+# Advances the self-simulated CRISP paper portfolio one trading day, commits
+# the updated ledger + web snapshot. Runs after the US market close.
+on:
+  schedule:
+    # 21:30 UTC ≈ 5:30pm ET, after the close (cron can't read holidays; the
+    # engine is idempotent and no-ops when there's no new close).
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paper-trade
+  cancel-in-progress: false
+
+jobs:
+  step:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Advance paper portfolio
+        run: python scripts/paper_step.py --source yfinance
+
+      - name: Commit ledger if changed
+        run: |
+          git config user.name "William Brodhead"
+          git config user.email "brodheadw@gmail.com"
+          if [ -n "$(git status --porcelain paper/)" ]; then
+            git add paper/
+            git commit -m "Paper trade: step to $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "No change (market closed or no new close); skipping commit."
+          fi
