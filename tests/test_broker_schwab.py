@@ -10,7 +10,7 @@ import pytest
 
 from crispfolio import schwab_auth as auth
 from crispfolio.broker.base import Order, OrderType, Side
-from crispfolio.broker.schwab import SchwabBroker
+from crispfolio.broker.schwab import PROD_BASE, SchwabBroker
 from crispfolio.config import SchwabConfig
 
 
@@ -122,21 +122,32 @@ def test_limit_order_includes_price(authed_cfg):
     assert payload["price"] == 199.5
 
 
-def test_live_guard_blocks_without_optin(authed_cfg, monkeypatch):
+def test_production_write_blocked_without_optin(authed_cfg, monkeypatch):
     monkeypatch.delenv("CRISP_ALLOW_LIVE", raising=False)
     session = _FakeSession()
     b = SchwabBroker(cfg=authed_cfg, sandbox=False, allow_live=True,
-                     base_url="https://x", session=session)
-    with pytest.raises(RuntimeError, match="live order"):
+                     base_url=PROD_BASE, session=session)
+    with pytest.raises(RuntimeError, match="PRODUCTION"):
         b.place_order(Order("XLK", Side.BUY, 1))
     assert not any(c[0] == "POST" for c in session.calls)   # nothing sent
 
 
-def test_live_allowed_with_full_optin(authed_cfg, monkeypatch):
+def test_sandbox_flag_cannot_write_production(authed_cfg, monkeypatch):
+    # The dangerous case: sandbox=True but pointed at the real host. The
+    # URL-based guard must still refuse the write.
+    monkeypatch.delenv("CRISP_ALLOW_LIVE", raising=False)
+    session = _FakeSession()
+    b = SchwabBroker(cfg=authed_cfg, sandbox=True, base_url=PROD_BASE, session=session)
+    with pytest.raises(RuntimeError, match="PRODUCTION"):
+        b.place_order(Order("XLK", Side.BUY, 1))
+    assert not any(c[0] == "POST" for c in session.calls)
+
+
+def test_production_write_allowed_with_full_optin(authed_cfg, monkeypatch):
     monkeypatch.setenv("CRISP_ALLOW_LIVE", "1")
     session = _FakeSession()
     b = SchwabBroker(cfg=authed_cfg, sandbox=False, allow_live=True,
-                     base_url="https://x", session=session)
+                     base_url=PROD_BASE, session=session)
     assert b.place_order(Order("XLK", Side.BUY, 1)) == "999"
 
 

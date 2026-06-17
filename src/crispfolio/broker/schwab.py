@@ -5,14 +5,16 @@ rebalance code is identical; only the construction changes. Authentication
 reuses :func:`crispfolio.schwab_auth.get_access_token` (the cached OAuth token);
 run ``scripts/schwab_login.py`` once first.
 
-Two environments share one codebase, differing only by base URL (per Schwab's
-docs, "the same credentials are used; only the API base URL changes"):
+Environment is decided by the **base URL**, and that is also what gates writes —
+not the ``sandbox`` flag, which only labels intent:
 
-* **Sandbox** (``sandbox=True``, the default) — synthetic accounts and money.
-  Safe to exercise the full order path. Point ``SCHWAB_API_BASE`` (or the
-  ``base_url`` arg) at the sandbox host shown in your Developer Portal app.
-* **Production** (``sandbox=False``) — real money. Guarded hard: a live order
-  also requires ``allow_live=True`` *and* env ``CRISP_ALLOW_LIVE=1``.
+* **Sandbox** — point ``SCHWAB_API_BASE`` (or the ``base_url`` arg) at the
+  sandbox host from your Developer Portal app. Any non-production host accepts
+  orders freely (synthetic money).
+* **Production** (``https://api.schwabapi.com``, the default) — real money.
+  Every write is refused unless ``allow_live=True`` *and* env
+  ``CRISP_ALLOW_LIVE=1``. This holds even with ``sandbox=True``, so a
+  mis-pointed "sandbox" run can never place a real order.
 
 Endpoints (Trader API):
     GET    {base}/trader/v1/accounts/accountNumbers
@@ -59,14 +61,25 @@ class SchwabBroker(Broker):
     def _auth_headers(self) -> dict:
         return {"Authorization": f"Bearer {get_access_token(self.cfg)}"}
 
-    def _check_live_allowed(self) -> None:
-        """Block any real-money write unless explicitly, doubly opted in."""
-        if self.sandbox:
+    def _is_production(self) -> bool:
+        """True when pointed at the real-money Schwab host."""
+        return self.base.rstrip("/") == PROD_BASE
+
+    def _check_write_allowed(self) -> None:
+        """Block any write to the PRODUCTION host unless fully opted in.
+
+        Keyed off the actual base URL, not the ``sandbox`` flag — the flag only
+        labels intent, so ``sandbox=True`` pointed at production must still be
+        refused. A non-production (sandbox) host is allowed freely.
+        """
+        if not self._is_production():
             return
         if not (self.allow_live and os.environ.get("CRISP_ALLOW_LIVE") == "1"):
             raise RuntimeError(
-                "refusing to place a live order: sandbox=False requires both "
-                "allow_live=True and env CRISP_ALLOW_LIVE=1."
+                f"refusing to write to the PRODUCTION Schwab host ({self.base}): "
+                "real-money orders require allow_live=True AND env "
+                "CRISP_ALLOW_LIVE=1. Point SCHWAB_API_BASE at a sandbox host for "
+                "synthetic-money testing."
             )
 
     def account_hash(self) -> str:
@@ -122,11 +135,12 @@ class SchwabBroker(Broker):
         return Account(cash=cash, positions=positions)
 
     def place_order(self, order: Order) -> str:
-        self._check_live_allowed()
         payload = self._order_payload(order)
         if self.dry_run:
+            # A preview never sends anything, so it is safe even on production.
             print(f"[dry-run] would POST order: {payload}")
             return "dry-run"
+        self._check_write_allowed()
         url = f"{self.base}/trader/v1/accounts/{self.account_hash()}/orders"
         resp = self._session.post(
             url,
@@ -148,7 +162,7 @@ class SchwabBroker(Broker):
         return resp.json()
 
     def cancel_order(self, order_id: str) -> None:
-        self._check_live_allowed()
+        self._check_write_allowed()
         url = f"{self.base}/trader/v1/accounts/{self.account_hash()}/orders/{order_id}"
         resp = self._session.delete(url, headers=self._auth_headers(), timeout=30)
         if resp.status_code not in (200, 201):
