@@ -1,20 +1,16 @@
 """Live paper-trading engine for a single strategy.
 
-Runs a *self-simulated* paper portfolio: it holds a virtual cash + shares
-ledger, marks to market at each new daily close, and rebalances to the
-strategy's target weights on a fixed cadence — reusing the same turnover-cost
-model as the backtest, so the live equity curve is a true forward continuation
-of it.
+Runs a forward paper portfolio: at each new daily close it marks the book to
+market and, on a fixed cadence, rebalances to the strategy's target weights by
+generating and routing **discrete whole-share orders** through a
+:class:`~crispfolio.broker.base.Broker`. With a ``PaperBroker`` the fills are
+simulated locally (and the whole book serialises into the ledger JSON, so a
+scheduled job can load it, take one step, and commit it back); with a
+``SchwabBroker`` the very same logic places orders against a Schwab account.
 
-This is deliberately broker-independent: Schwab exposes no API sandbox (paper
-trading lives only inside thinkorswim), and its OAuth refresh token expires
-every 7 days and needs an interactive browser login, so it can't drive an
-unattended scheduled job. A simulated book fed by any ``DataSource`` has none
-of those constraints and, being non-sensitive, is safe to publish.
-
-The ledger is plain JSON so a scheduled job can load it, append one step, and
-commit it back. Each call to :func:`step` is idempotent per trading day: if the
-latest available close is one we've already recorded, it's a no-op.
+This is deliberately broker-pluggable: the strategy and cadence code never know
+which broker is underneath. Each :func:`step` is idempotent per trading day —
+if the latest available close is one already recorded, it's a no-op.
 """
 from __future__ import annotations
 
@@ -25,6 +21,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from . import execution
+from .broker.base import Broker
+from .broker.paper import PaperBroker
 from .data import DataSource
 from .strategies import crisp
 
@@ -38,7 +37,12 @@ def _fetch_start(lookback: int, pad_days: int = 120) -> int:
 
 @dataclass
 class Ledger:
-    """The full paper-portfolio state, serialised to JSON verbatim."""
+    """The paper-portfolio state, serialised to JSON verbatim.
+
+    Cash and positions live inside ``broker_state`` (a serialised
+    ``PaperBroker``) for the local-simulation case; for a remote broker the book
+    is the broker's own and ``broker_state`` stays ``None``.
+    """
 
     strategy: str
     tickers: list[str]
@@ -46,10 +50,9 @@ class Ledger:
     initial_capital: float = 100_000.0
     lookback: int = 252
     rebalance_every: int = 21
-    cost_bps: float = 5.0
+    slippage_bps: float = 1.0          # adverse per-fill slippage (paper broker)
+    min_notional: float = 0.0          # skip rebalancing trades smaller than this
 
-    cash: float = 0.0
-    shares: dict[str, float] = field(default_factory=dict)
     # weights effective right now (target from the last rebalance)
     weights: dict[str, float] = field(default_factory=dict)
 
@@ -57,6 +60,10 @@ class Ledger:
     last_rebalance: str | None = None      # last date we traded
     days_since_rebalance: int = 0          # trading days since last trade
     rebalance_count: int = 0
+    last_orders: list[dict] = field(default_factory=list)  # trades at last rebalance
+
+    # serialised PaperBroker (cash + positions + fills); None for remote brokers
+    broker_state: dict | None = None
 
     # equity curve: parallel arrays, growth-of-$1 normalised to inception
     history_dates: list[str] = field(default_factory=list)
@@ -76,9 +83,12 @@ class Ledger:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         Path(path).write_text(self.to_json())
 
-    def market_value(self, prices: pd.Series) -> float:
-        held = sum(self.shares.get(t, 0.0) * float(prices[t]) for t in prices.index)
-        return self.cash + held
+    # -- paper-broker glue -------------------------------------------------- #
+    def make_paper_broker(self) -> PaperBroker:
+        """Reconstruct the local paper book from ``broker_state`` (or a fresh one)."""
+        if self.broker_state:
+            return PaperBroker.from_dict(self.broker_state)
+        return PaperBroker(slippage_bps=self.slippage_bps)
 
 
 def _target_weights(strategy_name: str, window: pd.DataFrame) -> np.ndarray:
@@ -93,47 +103,26 @@ def _target_weights(strategy_name: str, window: pd.DataFrame) -> np.ndarray:
     return w
 
 
-def _rebalance(ledger: Ledger, prices: pd.Series, window: pd.DataFrame) -> None:
-    """Trade the book to target weights at ``prices``, charging turnover cost."""
-    tickers = list(window.columns)
-    nav = ledger.market_value(prices)
-
-    w_new = _target_weights(ledger.strategy, window)
-    w_old = np.array([ledger.weights.get(t, 0.0) for t in tickers])
-    turnover = float(np.abs(w_new - w_old).sum())
-    cost = nav * turnover * ledger.cost_bps / 1e4
-
-    investable = nav - cost
-    new_shares: dict[str, float] = {}
-    invested = 0.0
-    for t, w in zip(tickers, w_new):
-        dollars = investable * float(w)
-        sh = dollars / float(prices[t])
-        new_shares[t] = sh
-        invested += sh * float(prices[t])
-
-    ledger.shares = new_shares
-    ledger.cash = investable - invested          # residual (≈0; rounding only)
-    ledger.weights = {t: float(w) for t, w in zip(tickers, w_new)}
-    ledger.last_rebalance = str(prices.name)
-    ledger.days_since_rebalance = 0
-    ledger.rebalance_count += 1
-
-
-def step(ledger: Ledger, source: DataSource, *, as_of: str | None = None) -> bool:
+def step(
+    ledger: Ledger,
+    broker: Broker,
+    source: DataSource,
+    *,
+    as_of: str | None = None,
+    allow_short: bool = True,
+) -> bool:
     """Advance the ledger by at most one trading day. Returns True if it acted.
 
-    Pulls recent prices, and for the latest close not yet recorded: marks to
-    market, rebalances if the cadence is due (or it's inception), and appends a
-    point to the equity history. Idempotent if there's no new close.
+    Pulls recent prices and, for the latest close not yet recorded: rebalances
+    via the broker if the cadence is due (or it's inception), marks the book to
+    market, and appends a point to the equity history. Idempotent if there's no
+    new close. If ``broker`` is a ``PaperBroker``, its post-step state is written
+    back into ``ledger.broker_state``.
     """
-    # Anchor the history window to as_of when given (backfill/testing), else to
-    # today — otherwise a past as_of yields start > end and no data.
     anchor = pd.Timestamp(as_of) if as_of else pd.Timestamp.today()
     start = (anchor - pd.Timedelta(days=_fetch_start(ledger.lookback))).strftime("%Y-%m-%d")
     data = source.get_prices(ledger.tickers, start=start, end=as_of)
     prices = data.prices.dropna(how="any")
-    # keep only tickers we actually have, in a stable order
     cols = [t for t in ledger.tickers if t in prices.columns]
     prices = prices[cols]
     rets = data.returns("simple")[cols].dropna(how="any")
@@ -143,8 +132,7 @@ def step(ledger: Ledger, source: DataSource, *, as_of: str | None = None) -> boo
     latest = prices.index[-1]
     latest_str = str(latest.date())
 
-    # already recorded this close → nothing to do
-    if ledger.last_date == latest_str:
+    if ledger.last_date == latest_str:        # already recorded this close
         return False
 
     if len(rets) < ledger.lookback:
@@ -157,20 +145,37 @@ def step(ledger: Ledger, source: DataSource, *, as_of: str | None = None) -> boo
     first_run = ledger.inception is None
     if first_run:
         ledger.inception = latest_str
-        ledger.cash = ledger.initial_capital
         ledger.tickers = cols
 
-    # advance the cadence counter for a normal new day
+    if isinstance(broker, PaperBroker):
+        if first_run:
+            broker.ensure_funded(ledger.initial_capital)
+        broker.stage_prices(last_prices)
+
     if not first_run:
         ledger.days_since_rebalance += 1
 
     due = first_run or ledger.days_since_rebalance >= ledger.rebalance_every
     if due:
-        _rebalance(ledger, last_prices, window)
+        weights = {t: float(w) for t, w in zip(cols, _target_weights(ledger.strategy, window))}
+        orders = execution.rebalance(
+            broker, weights, last_prices,
+            allow_short=allow_short, min_notional=ledger.min_notional,
+        )
+        ledger.weights = weights
+        ledger.last_orders = [
+            {"symbol": o.symbol, "side": o.side.value, "qty": o.qty} for o in orders
+        ]
+        ledger.last_rebalance = latest_str
+        ledger.days_since_rebalance = 0
+        ledger.rebalance_count += 1
 
-    nav = ledger.market_value(last_prices)
+    nav = broker.get_account().market_value(last_prices)
     ledger.last_date = latest_str
     ledger.history_dates.append(latest_str)
     ledger.history_value.append(round(nav, 2))
     ledger.history_equity.append(round(nav / ledger.initial_capital, 6))
+
+    if isinstance(broker, PaperBroker):
+        ledger.broker_state = broker.to_dict()
     return True

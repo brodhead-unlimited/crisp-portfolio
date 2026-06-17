@@ -30,7 +30,7 @@ jobs:
         run: pip install -e .
 
       - name: Advance paper portfolio
-        run: python scripts/paper_step.py --source yfinance
+        run: python scripts/paper_step.py --broker paper --data-source yfinance
 
       - name: Commit ledger if changed
         run: |

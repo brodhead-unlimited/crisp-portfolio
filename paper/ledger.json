@@ -17,57 +17,322 @@
     "EEM",
     "VNQ"
   ],
-  "inception": "2026-06-02",
+  "inception": "2026-06-16",
   "initial_capital": 100000.0,
   "lookback": 252,
   "rebalance_every": 21,
-  "cost_bps": 5.0,
-  "cash": 22526.689195696672,
-  "shares": {
-    "XLK": 100.17022492352814,
-    "XLF": -142.54058565001017,
-    "XLE": 332.7536891417721,
-    "XLV": 37.17197525349562,
-    "XLI": 24.804029045179778,
-    "XLY": -33.40595555008833,
-    "XLP": 2.39859212510327,
-    "XLU": 67.87691281255735,
-    "XLB": 8.691427242985323,
-    "TLT": 35.95517235100583,
-    "IEF": 148.25758292730873,
-    "GLD": 10.091951418482306,
-    "EFA": 2.126559923979192,
-    "EEM": 185.07989352376583,
-    "VNQ": 17.174584531669936
-  },
+  "slippage_bps": 1.0,
+  "min_notional": 0.0,
   "weights": {
-    "XLK": 0.19864673291267732,
-    "XLF": -0.07338807810955197,
-    "XLE": 0.19296051543783901,
-    "XLV": 0.05444699299881968,
-    "XLI": 0.043227752675703626,
-    "XLY": -0.039301712764368425,
-    "XLP": 0.0019637498548189486,
-    "XLU": 0.02981287219653044,
-    "XLB": 0.004480063387065768,
-    "TLT": 0.030811011172855313,
-    "IEF": 0.1397878369020231,
-    "GLD": 0.04159459239656381,
-    "EFA": 0.002234430375963725,
-    "EEM": 0.13110212132367816,
-    "VNQ": 0.016241537491540795
+    "XLK": 0.15797070507115427,
+    "XLF": 0.005494807280842229,
+    "XLE": 0.15799944970114413,
+    "XLV": 0.06347662466856707,
+    "XLI": 0.0761449611801925,
+    "XLY": -0.04435323445467365,
+    "XLP": 0.08442142768283639,
+    "XLU": 0.06948568995882967,
+    "XLB": 0.005624743467965947,
+    "TLT": 0.019053964391864398,
+    "IEF": 0.13977806844864202,
+    "GLD": 0.026220722642621277,
+    "EFA": 0.005702726430693397,
+    "EEM": 0.1031689248624398,
+    "VNQ": 0.04110394975753335
   },
-  "last_date": "2026-06-02",
-  "last_rebalance": "2026-06-02 00:00:00",
+  "last_date": "2026-06-16",
+  "last_rebalance": "2026-06-16",
   "days_since_rebalance": 0,
   "rebalance_count": 1,
+  "last_orders": [
+    {
+      "symbol": "EEM",
+      "side": "BUY",
+      "qty": 150
+    },
+    {
+      "symbol": "EFA",
+      "side": "BUY",
+      "qty": 5
+    },
+    {
+      "symbol": "GLD",
+      "side": "BUY",
+      "qty": 6
+    },
+    {
+      "symbol": "IEF",
+      "side": "BUY",
+      "qty": 147
+    },
+    {
+      "symbol": "TLT",
+      "side": "BUY",
+      "qty": 22
+    },
+    {
+      "symbol": "VNQ",
+      "side": "BUY",
+      "qty": 41
+    },
+    {
+      "symbol": "XLB",
+      "side": "BUY",
+      "qty": 10
+    },
+    {
+      "symbol": "XLE",
+      "side": "BUY",
+      "qty": 285
+    },
+    {
+      "symbol": "XLF",
+      "side": "BUY",
+      "qty": 10
+    },
+    {
+      "symbol": "XLI",
+      "side": "BUY",
+      "qty": 42
+    },
+    {
+      "symbol": "XLK",
+      "side": "BUY",
+      "qty": 84
+    },
+    {
+      "symbol": "XLP",
+      "side": "BUY",
+      "qty": 98
+    },
+    {
+      "symbol": "XLU",
+      "side": "BUY",
+      "qty": 154
+    },
+    {
+      "symbol": "XLV",
+      "side": "BUY",
+      "qty": 41
+    },
+    {
+      "symbol": "XLY",
+      "side": "SELL_SHORT",
+      "qty": 37
+    }
+  ],
+  "broker_state": {
+    "cash": 9698.144196,
+    "positions": [
+      {
+        "symbol": "EEM",
+        "qty": 150,
+        "avg_price": 68.646863
+      },
+      {
+        "symbol": "EFA",
+        "qty": 5,
+        "avg_price": 104.320429
+      },
+      {
+        "symbol": "GLD",
+        "qty": 6,
+        "avg_price": 397.669768
+      },
+      {
+        "symbol": "IEF",
+        "qty": 147,
+        "avg_price": 94.529449
+      },
+      {
+        "symbol": "TLT",
+        "qty": 22,
+        "avg_price": 86.198621
+      },
+      {
+        "symbol": "VNQ",
+        "qty": 41,
+        "avg_price": 98.069804
+      },
+      {
+        "symbol": "XLB",
+        "qty": 10,
+        "avg_price": 52.725273
+      },
+      {
+        "symbol": "XLE",
+        "qty": 285,
+        "avg_price": 55.365537
+      },
+      {
+        "symbol": "XLF",
+        "qty": 10,
+        "avg_price": 54.355433
+      },
+      {
+        "symbol": "XLI",
+        "qty": 42,
+        "avg_price": 179.867991
+      },
+      {
+        "symbol": "XLK",
+        "qty": 84,
+        "avg_price": 186.458646
+      },
+      {
+        "symbol": "XLP",
+        "qty": 98,
+        "avg_price": 85.598555
+      },
+      {
+        "symbol": "XLU",
+        "qty": 154,
+        "avg_price": 45.064507
+      },
+      {
+        "symbol": "XLV",
+        "qty": 41,
+        "avg_price": 152.955296
+      },
+      {
+        "symbol": "XLY",
+        "qty": -37,
+        "avg_price": 118.448153
+      }
+    ],
+    "fills": [
+      {
+        "symbol": "EEM",
+        "side": "BUY",
+        "qty": 150,
+        "price": 68.646863,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "EFA",
+        "side": "BUY",
+        "qty": 5,
+        "price": 104.320429,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "GLD",
+        "side": "BUY",
+        "qty": 6,
+        "price": 397.669768,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "IEF",
+        "side": "BUY",
+        "qty": 147,
+        "price": 94.529449,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "TLT",
+        "side": "BUY",
+        "qty": 22,
+        "price": 86.198621,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "VNQ",
+        "side": "BUY",
+        "qty": 41,
+        "price": 98.069804,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLB",
+        "side": "BUY",
+        "qty": 10,
+        "price": 52.725273,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLE",
+        "side": "BUY",
+        "qty": 285,
+        "price": 55.365537,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLF",
+        "side": "BUY",
+        "qty": 10,
+        "price": 54.355433,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLI",
+        "side": "BUY",
+        "qty": 42,
+        "price": 179.867991,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLK",
+        "side": "BUY",
+        "qty": 84,
+        "price": 186.458646,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLP",
+        "side": "BUY",
+        "qty": 98,
+        "price": 85.598555,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLU",
+        "side": "BUY",
+        "qty": 154,
+        "price": 45.064507,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLV",
+        "side": "BUY",
+        "qty": 41,
+        "price": 152.955296,
+        "commission": 0.0,
+        "ts": null
+      },
+      {
+        "symbol": "XLY",
+        "side": "SELL_SHORT",
+        "qty": 37,
+        "price": 118.448153,
+        "commission": 0.0,
+        "ts": null
+      }
+    ],
+    "slippage_bps": 1.0,
+    "commission": 0.0,
+    "next_id": 16
+  },
   "history_dates": [
-    "2026-06-02"
+    "2026-06-16"
   ],
   "history_equity": [
-    0.9995
+    0.999901
   ],
   "history_value": [
-    99950.0
+    99990.09
   ]
 }
