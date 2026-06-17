@@ -63,3 +63,56 @@ class SchwabConfig:
             callback_url=os.environ.get("SCHWAB_CALLBACK_URL", DEFAULT_CALLBACK_URL),
             token_path=token_path,
         )
+
+
+# --------------------------------------------------------------------------- #
+# Alpaca — paper/live trading via static API keys (no OAuth, no token expiry)
+# --------------------------------------------------------------------------- #
+_ALPACA_SERVICE = "alpaca"
+ALPACA_PAPER_BASE = "https://paper-api.alpaca.markets"
+ALPACA_LIVE_BASE = "https://api.alpaca.markets"
+
+# keyring username -> ordered env-var fallbacks (support both common names)
+_ALPACA_ENV = {
+    "api_key": ("APCA_API_KEY_ID", "ALPACA_API_KEY"),
+    "api_secret": ("APCA_API_SECRET_KEY", "ALPACA_SECRET_KEY"),
+}
+
+
+def _get_alpaca_secret(name: str) -> str | None:
+    """Keychain (service ``alpaca``) first, then the known env-var names."""
+    try:
+        import keyring
+
+        val = keyring.get_password(_ALPACA_SERVICE, name)
+        if val:
+            return val
+    except Exception:
+        pass
+    for env in _ALPACA_ENV[name]:
+        v = os.environ.get(env)
+        if v:
+            return v
+    return None
+
+
+@dataclass
+class AlpacaConfig:
+    api_key: str
+    api_secret: str
+    base_url: str = ALPACA_PAPER_BASE
+
+    @classmethod
+    def load(cls, *, paper: bool = True) -> "AlpacaConfig":
+        api_key = _get_alpaca_secret("api_key")
+        api_secret = _get_alpaca_secret("api_secret")
+        missing = [n for n, v in (("api_key", api_key), ("api_secret", api_secret)) if not v]
+        if missing:
+            raise RuntimeError(
+                f"Missing Alpaca secret(s): {', '.join(missing)}. Store them with:  "
+                f"keyring set alpaca {missing[0]}"
+            )
+        base = os.environ.get("ALPACA_API_BASE") or (
+            ALPACA_PAPER_BASE if paper else ALPACA_LIVE_BASE
+        )
+        return cls(api_key=api_key, api_secret=api_secret, base_url=base)
