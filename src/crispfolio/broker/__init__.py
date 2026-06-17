@@ -6,6 +6,7 @@ behind hard guards, production). Both satisfy :class:`Broker`, so the rebalance
 logic in :mod:`crispfolio.execution` is identical for either.
 """
 from .base import Account, Broker, Fill, Order, OrderType, Position, Side
+from .alpaca import AlpacaBroker
 from .paper import PaperBroker
 from .schwab import SchwabBroker
 
@@ -17,6 +18,7 @@ __all__ = [
     "OrderType",
     "Position",
     "Side",
+    "AlpacaBroker",
     "PaperBroker",
     "SchwabBroker",
 ]

@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from crispfolio.broker import PaperBroker, SchwabBroker
+from crispfolio.broker import AlpacaBroker, PaperBroker, SchwabBroker
 from crispfolio.paper import Ledger, step
 
 # Same cross-asset basket as the backtest, so the live curve continues it.
@@ -56,6 +56,8 @@ def make_broker(name: str, ledger: Ledger, *, sandbox: bool, allow_live: bool,
                 dry_run: bool):
     if name == "paper":
         return ledger.make_paper_broker()
+    if name == "alpaca":
+        return AlpacaBroker(paper=True, allow_live=allow_live, dry_run=dry_run)
     if name == "schwab":
         return SchwabBroker(sandbox=sandbox, allow_live=allow_live, dry_run=dry_run)
     raise ValueError(f"unknown broker: {name!r}")
@@ -89,7 +91,7 @@ def web_payload(ledger: Ledger) -> dict:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--broker", choices=["paper", "schwab"], default="paper")
+    p.add_argument("--broker", choices=["paper", "alpaca", "schwab"], default="paper")
     p.add_argument("--data-source", choices=["yfinance", "schwab"], default="yfinance")
     p.add_argument("--ledger", default="paper/ledger.json",
                    help="path to the persistent JSON ledger")
