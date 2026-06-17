@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -89,6 +90,50 @@ def web_payload(ledger: Ledger) -> dict:
     }
 
 
+def alpaca_web_payload(broker, ledger: Ledger) -> dict:
+    """Website snapshot sourced from Alpaca itself.
+
+    Equity + curve come from Alpaca (its values are authoritative and intraday),
+    not the engine's per-step mark. Schema matches what ``LivePaper.tsx`` reads,
+    so the site needs no change.
+    """
+    value = broker.equity()
+
+    # Intraday hourly curve for the recent window (Alpaca only allows 1H for
+    # <=30 days); fall back to the full daily history otherwise.
+    dates: list[str] = []
+    series: list[float] = []
+    base = ledger.initial_capital or 100_000.0
+    for period, tf, fmt in (("1W", "1H", "%Y-%m-%d %H:%M"), ("all", "1D", "%Y-%m-%d")):
+        hist = broker.get_portfolio_history(period=period, timeframe=tf)
+        for t, e in zip(hist["timestamp"], hist["equity"]):
+            if e is None:
+                continue
+            dates.append(datetime.fromtimestamp(t, tz=timezone.utc).strftime(fmt))
+            series.append(round(e / base, 6))
+        if series:
+            break
+
+    holdings = sorted(
+        ({"ticker": t, "weight": round(w, 4)} for t, w in ledger.weights.items()),
+        key=lambda h: h["weight"],
+        reverse=True,
+    )
+    return {
+        "strategy": ledger.strategy,
+        "inception": ledger.inception,
+        "as_of": dates[-1] if dates else ledger.last_date,
+        "initial_capital": ledger.initial_capital,
+        "value": round(value, 2),
+        "rebalances": ledger.rebalance_count,
+        "last_rebalance": ledger.last_rebalance,
+        "cadence_days": ledger.rebalance_every,
+        "holdings": holdings,
+        "last_orders": ledger.last_orders,
+        "equity": {"dates": dates, "series": series},
+    }
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--broker", choices=["paper", "alpaca", "schwab"], default="paper")
@@ -128,15 +173,35 @@ def main() -> int:
     )
     acted = step(ledger, broker, source, as_of=args.as_of, allow_short=not args.no_short)
 
+    # A dry-run previews orders but must never persist (it would advance the
+    # ledger's last_date and make the next real run a no-op).
+    if args.dry_run:
+        print(f"[dry-run] acted={acted}; {len(ledger.last_orders)} order(s) computed; "
+              "nothing placed or written.")
+        return 0
+
+    Path(args.web_out).parent.mkdir(parents=True, exist_ok=True)
+
+    if args.broker == "alpaca":
+        # Refresh the site snapshot from Alpaca every run (hourly intraday),
+        # whether or not a rebalance happened this step.
+        payload = alpaca_web_payload(broker, ledger)
+        Path(args.web_out).write_text(json.dumps(payload, indent=2))
+        if acted:
+            ledger.save(ledger_path)
+        print(f"Alpaca snapshot: equity=${payload['value']:,.2f}, "
+              f"{len(payload['equity']['series'])} curve point(s); "
+              f"{'rebalanced' if acted else 'no new close'}.")
+        return 0
+
+    # paper / schwab: only write when a new close advanced the book
     if acted:
         ledger.save(ledger_path)
-        Path(args.web_out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.web_out).write_text(json.dumps(web_payload(ledger), indent=2))
         eq = ledger.history_equity[-1]
-        n_orders = len(ledger.last_orders)
         print(f"Stepped to {ledger.last_date}: value=${ledger.history_value[-1]:,.2f} "
               f"(growth x{eq:.4f}); {ledger.rebalance_count} rebalances total, "
-              f"{n_orders} order(s) at last rebalance.")
+              f"{len(ledger.last_orders)} order(s) at last rebalance.")
     else:
         print(f"No new close since {ledger.last_date}; nothing to do.")
     return 0

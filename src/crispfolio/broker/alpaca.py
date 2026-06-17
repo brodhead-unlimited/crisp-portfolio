@@ -116,6 +116,13 @@ class AlpacaBroker(Broker):
             raise RuntimeError(f"place_order returned {r.status_code}: {r.text}")
         return r.json().get("id", "")
 
+    def equity(self, prices=None) -> float:
+        """Alpaca's own net-liquidation value — consistent even mid-settlement."""
+        r = self._session.get(f"{self.base}/v2/account", headers=self._headers(), timeout=30)
+        if r.status_code != 200:
+            raise RuntimeError(f"equity (account) returned {r.status_code}: {r.text}")
+        return float(r.json().get("equity", 0.0))
+
     def get_order(self, order_id: str) -> dict:
         r = self._session.get(
             f"{self.base}/v2/orders/{order_id}", headers=self._headers(), timeout=30

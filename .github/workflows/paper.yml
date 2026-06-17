@@ -1,12 +1,15 @@
-name: Paper trade (daily)
+name: Paper trade (hourly)
 
-# Advances the self-simulated CRISP paper portfolio one trading day, commits
-# the updated ledger + web snapshot. Runs after the US market close.
+# Runs the CRISP paper portfolio on Alpaca (paper account — synthetic money).
+# Each run refreshes the website snapshot from Alpaca's live equity/portfolio
+# history (so the curve updates intraday) and rebalances when the 21-trading-day
+# cadence is due. Commits the updated ledger + web snapshot.
 on:
   schedule:
-    # 21:30 UTC ≈ 5:30pm ET, after the close (cron can't read holidays; the
-    # engine is idempotent and no-ops when there's no new close).
-    - cron: "30 21 * * 1-5"
+    # Hourly during US market hours (≈9am–5pm ET). Cron is UTC and can't read
+    # holidays; the engine is idempotent and only trades when a new daily close
+    # makes the cadence due.
+    - cron: "0 13-21 * * 1-5"
   workflow_dispatch: {}
 
 permissions:
@@ -30,7 +33,10 @@ jobs:
         run: pip install -e .
 
       - name: Advance paper portfolio
-        run: python scripts/paper_step.py --broker paper --data-source yfinance
+        env:
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+        run: python scripts/paper_step.py --broker alpaca --data-source yfinance
 
       - name: Commit ledger if changed
         run: |
@@ -38,8 +44,8 @@ jobs:
           git config user.email "brodheadw@gmail.com"
           if [ -n "$(git status --porcelain paper/)" ]; then
             git add paper/
-            git commit -m "Paper trade: step to $(date -u +%Y-%m-%d)"
+            git commit -m "Paper trade: snapshot $(date -u +'%Y-%m-%d %H:%M')Z"
             git push
           else
-            echo "No change (market closed or no new close); skipping commit."
+            echo "No change; skipping commit."
           fi

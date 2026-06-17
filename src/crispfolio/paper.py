@@ -170,7 +170,11 @@ def step(
         ledger.days_since_rebalance = 0
         ledger.rebalance_count += 1
 
-    nav = broker.get_account().market_value(last_prices)
+    # Prefer the broker's authoritative equity (real brokers compute it
+    # consistently); fall back to recomputing from positions for the paper sim.
+    nav = broker.equity(last_prices)
+    if nav is None:
+        nav = broker.get_account().market_value(last_prices)
     ledger.last_date = latest_str
     ledger.history_dates.append(latest_str)
     ledger.history_value.append(round(nav, 2))

@@ -156,3 +156,13 @@ class Broker(ABC):
         broker uses it to price synchronous fills. Default: no-op.
         """
         return None
+
+    def equity(self, prices: pd.Series | None = None) -> float | None:
+        """The broker's authoritative net-liquidation value, if it has one.
+
+        A real broker (e.g. Alpaca) computes equity atomically and consistently,
+        which is more reliable than recomputing ``market_value`` mid-settlement.
+        Return ``None`` (the default) to tell the caller to fall back to
+        ``get_account().market_value(prices)``.
+        """
+        return None

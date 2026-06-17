@@ -144,6 +144,11 @@ def test_order_http_error_raises(cfg):
         b.place_order(Order("XLK", Side.BUY, 1))
 
 
+def test_equity_returns_account_equity(cfg):
+    b = _broker(cfg, _FakeSession())
+    assert b.equity() == 100000.0
+
+
 def test_portfolio_history_parsed(cfg):
     b = _broker(cfg, _FakeSession())
     hist = b.get_portfolio_history()
