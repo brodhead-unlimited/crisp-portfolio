@@ -40,9 +40,9 @@
     "EEM": 0.10316911124574082,
     "VNQ": 0.041103951883666105
   },
-  "last_date": "2026-06-16",
+  "last_date": "2026-06-17",
   "last_rebalance": "2026-06-16",
-  "days_since_rebalance": 0,
+  "days_since_rebalance": 1,
   "rebalance_count": 1,
   "last_orders": [
     {
@@ -123,12 +123,15 @@
   ],
   "broker_state": null,
   "history_dates": [
-    "2026-06-16"
+    "2026-06-16",
+    "2026-06-17"
   ],
   "history_equity": [
-    0.996429
+    0.996429,
+    0.999767
   ],
   "history_value": [
-    99642.93
+    99642.93,
+    99976.74
   ]
 }
