@@ -107,7 +107,11 @@ def alpaca_web_payload(broker, ledger: Ledger) -> dict:
     for period, tf, fmt in (("1W", "1H", "%Y-%m-%d %H:%M"), ("all", "1D", "%Y-%m-%d")):
         hist = broker.get_portfolio_history(period=period, timeframe=tf)
         for t, e in zip(hist["timestamp"], hist["equity"]):
-            if e is None:
+            # Skip non-positive points: Alpaca's portfolio history reports 0 (or a
+            # tiny negative) for timestamps in the window that predate the account's
+            # existence/funding. Left in, those zeros drag the chart's y-axis to 0
+            # and flatten the real ~1.0 curve.
+            if e is None or e <= 0:
                 continue
             dates.append(datetime.fromtimestamp(t, tz=timezone.utc).strftime(fmt))
             series.append(round(e / base, 6))
