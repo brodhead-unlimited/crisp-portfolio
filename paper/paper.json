@@ -1,160 +1,123 @@
 {
   "strategy": "crisp",
   "inception": "2026-06-16",
-  "as_of": "2026-07-13 19:30",
+  "as_of": "2026-07-14 17:30",
   "initial_capital": 100000.0,
-  "value": 99657.44,
-  "rebalances": 1,
-  "last_rebalance": "2026-06-16",
+  "value": 99886.31,
+  "rebalances": 2,
+  "last_rebalance": "2026-07-13",
   "cadence_days": 21,
   "holdings": [
     {
-      "ticker": "XLK",
-      "weight": 0.158
-    },
-    {
       "ticker": "XLE",
-      "weight": 0.158
-    },
-    {
-      "ticker": "IEF",
-      "weight": 0.1398
-    },
-    {
-      "ticker": "EEM",
-      "weight": 0.1032
-    },
-    {
-      "ticker": "XLP",
-      "weight": 0.0844
-    },
-    {
-      "ticker": "XLI",
-      "weight": 0.0761
-    },
-    {
-      "ticker": "XLU",
-      "weight": 0.0695
+      "weight": 0.1587
     },
     {
       "ticker": "XLV",
-      "weight": 0.0635
+      "weight": 0.1319
+    },
+    {
+      "ticker": "XLK",
+      "weight": 0.1258
+    },
+    {
+      "ticker": "XLU",
+      "weight": 0.0776
+    },
+    {
+      "ticker": "EEM",
+      "weight": 0.0755
+    },
+    {
+      "ticker": "IEF",
+      "weight": 0.0694
     },
     {
       "ticker": "VNQ",
-      "weight": 0.0411
+      "weight": 0.0596
+    },
+    {
+      "ticker": "XLI",
+      "weight": 0.0584
+    },
+    {
+      "ticker": "XLP",
+      "weight": 0.057
     },
     {
       "ticker": "GLD",
-      "weight": 0.0262
-    },
-    {
-      "ticker": "TLT",
-      "weight": 0.0191
+      "weight": 0.025
     },
     {
       "ticker": "EFA",
-      "weight": 0.0057
-    },
-    {
-      "ticker": "XLB",
-      "weight": 0.0056
+      "weight": 0.0237
     },
     {
       "ticker": "XLF",
-      "weight": 0.0055
+      "weight": 0.0097
+    },
+    {
+      "ticker": "TLT",
+      "weight": -0.0252
+    },
+    {
+      "ticker": "XLB",
+      "weight": -0.0481
     },
     {
       "ticker": "XLY",
-      "weight": -0.0444
+      "weight": -0.0543
     }
   ],
   "last_orders": [
     {
-      "symbol": "EEM",
-      "side": "BUY",
-      "qty": 150
-    },
-    {
-      "symbol": "EFA",
-      "side": "BUY",
-      "qty": 5
-    },
-    {
-      "symbol": "GLD",
-      "side": "BUY",
-      "qty": 6
-    },
-    {
-      "symbol": "IEF",
-      "side": "BUY",
-      "qty": 147
-    },
-    {
-      "symbol": "TLT",
-      "side": "BUY",
-      "qty": 22
-    },
-    {
-      "symbol": "VNQ",
-      "side": "BUY",
-      "qty": 41
-    },
-    {
       "symbol": "XLB",
-      "side": "BUY",
-      "qty": 10
+      "side": "SELL_SHORT",
+      "qty": 94
     },
     {
       "symbol": "XLE",
-      "side": "BUY",
-      "qty": 285
+      "side": "SELL",
+      "qty": 7
     },
     {
       "symbol": "XLF",
       "side": "BUY",
-      "qty": 10
+      "qty": 7
     },
     {
       "symbol": "XLI",
-      "side": "BUY",
-      "qty": 42
+      "side": "SELL",
+      "qty": 10
     },
     {
       "symbol": "XLK",
-      "side": "BUY",
-      "qty": 84
+      "side": "SELL",
+      "qty": 15
     },
     {
       "symbol": "XLP",
-      "side": "BUY",
-      "qty": 98
+      "side": "SELL",
+      "qty": 31
     },
     {
       "symbol": "XLU",
       "side": "BUY",
-      "qty": 154
+      "qty": 15
     },
     {
       "symbol": "XLV",
       "side": "BUY",
-      "qty": 41
+      "qty": 40
     },
     {
       "symbol": "XLY",
       "side": "SELL_SHORT",
-      "qty": 37
+      "qty": 9
     }
   ],
   "equity": {
     "dates": [
-      "2026-07-07 13:30",
-      "2026-07-07 14:30",
-      "2026-07-07 15:30",
-      "2026-07-07 16:30",
-      "2026-07-07 17:30",
-      "2026-07-07 18:30",
-      "2026-07-07 19:30",
       "2026-07-08 13:30",
       "2026-07-08 14:30",
       "2026-07-08 15:30",
@@ -182,16 +145,14 @@
       "2026-07-13 16:30",
       "2026-07-13 17:30",
       "2026-07-13 18:30",
-      "2026-07-13 19:30"
+      "2026-07-13 19:30",
+      "2026-07-14 13:30",
+      "2026-07-14 14:30",
+      "2026-07-14 15:30",
+      "2026-07-14 16:30",
+      "2026-07-14 17:30"
     ],
     "series": [
-      0.993488,
-      0.992467,
-      0.991951,
-      0.992937,
-      0.993023,
-      0.993106,
-      0.993282,
       0.993457,
       0.994582,
       0.992324,
@@ -219,7 +180,12 @@
       0.995855,
       0.996016,
       0.996356,
-      0.995847
+      0.995847,
+      1.001918,
+      0.999328,
+      0.998848,
+      0.99833,
+      0.99817
     ]
   }
 }
