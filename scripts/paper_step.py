@@ -26,7 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -90,7 +90,7 @@ def web_payload(ledger: Ledger) -> dict:
     }
 
 
-def alpaca_web_payload(broker, ledger: Ledger) -> dict:
+def alpaca_web_payload(broker, ledger: Ledger, prev: dict | None = None) -> dict:
     """Website snapshot sourced from Alpaca itself.
 
     Equity + curve come from Alpaca (its values are authoritative and intraday),
@@ -114,21 +114,25 @@ def alpaca_web_payload(broker, ledger: Ledger) -> dict:
             out.append((datetime.fromtimestamp(t, tz=timezone.utc).strftime(fmt), round(e / base, 6)))
         return out
 
-    # Full daily curve since inception, refined with hourly points for the most
-    # recent week (Alpaca caps intraday timeframes at 30-day windows).
-    daily: list[tuple[str, float]] = []
+    # Hourly curve for the longest window Alpaca allows (intraday timeframes are
+    # capped at 30-day queries). The published curve keeps hourly cadence for the
+    # portfolio's WHOLE life: each run re-fetches the recent window and keeps the
+    # previously published points that fall before it, so nothing ages out.
+    start_day = date.today() - timedelta(days=29)
     if ledger.inception:
-        try:
-            daily = points("%Y-%m-%d", start=f"{ledger.inception}T00:00:00Z",
-                           period=None, timeframe="1D")
-        except RuntimeError as exc:
-            print(f"warning: daily portfolio history unavailable ({exc})")
-    hourly = points("%Y-%m-%d %H:%M", period="1W", timeframe="1H")
-    if hourly:
-        first_hourly_day = hourly[0][0][:10]
-        merged = [p for p in daily if p[0] < first_hourly_day] + hourly
-    else:
-        merged = daily
+        start_day = max(start_day, date.fromisoformat(ledger.inception))
+    hourly = points("%Y-%m-%d %H:%M", start=f"{start_day.isoformat()}T00:00:00Z",
+                    period=None, timeframe="1H")
+    merged = hourly
+    if prev and prev.get("equity", {}).get("dates"):
+        prev_pts = list(zip(prev["equity"]["dates"], prev["equity"]["series"]))
+        if hourly:
+            # Drop carried points on any DAY the fresh window covers, so old
+            # daily-cadence points can't linger alongside that day's hourly ones.
+            first_day = hourly[0][0][:10]
+            merged = [p for p in prev_pts if p[0][:10] < first_day] + hourly
+        else:
+            merged = prev_pts
     dates = [d for d, _ in merged]
     series = [v for _, v in merged]
 
@@ -202,8 +206,16 @@ def main() -> int:
 
     if args.broker == "alpaca":
         # Refresh the site snapshot from Alpaca every run (hourly intraday),
-        # whether or not a rebalance happened this step.
-        payload = alpaca_web_payload(broker, ledger)
+        # whether or not a rebalance happened this step. The previous snapshot
+        # carries the hourly history older than Alpaca's 30-day intraday window.
+        prev = None
+        web_path = Path(args.web_out)
+        if web_path.exists():
+            try:
+                prev = json.loads(web_path.read_text())
+            except (json.JSONDecodeError, OSError) as exc:
+                print(f"warning: could not read previous snapshot ({exc})")
+        payload = alpaca_web_payload(broker, ledger, prev=prev)
         Path(args.web_out).write_text(json.dumps(payload, indent=2))
         if acted:
             ledger.save(ledger_path)
