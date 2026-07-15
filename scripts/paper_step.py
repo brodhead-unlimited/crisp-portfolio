@@ -99,13 +99,11 @@ def alpaca_web_payload(broker, ledger: Ledger) -> dict:
     """
     value = broker.equity()
 
-    # Intraday hourly curve for the recent window (Alpaca only allows 1H for
-    # <=30 days); fall back to the full daily history otherwise.
-    dates: list[str] = []
-    series: list[float] = []
     base = ledger.initial_capital or 100_000.0
-    for period, tf, fmt in (("1W", "1H", "%Y-%m-%d %H:%M"), ("all", "1D", "%Y-%m-%d")):
-        hist = broker.get_portfolio_history(period=period, timeframe=tf)
+
+    def points(fmt: str, **kwargs) -> list[tuple[str, float]]:
+        hist = broker.get_portfolio_history(**kwargs)
+        out: list[tuple[str, float]] = []
         for t, e in zip(hist["timestamp"], hist["equity"]):
             # Skip non-positive points: Alpaca's portfolio history reports 0 (or a
             # tiny negative) for timestamps in the window that predate the account's
@@ -113,10 +111,26 @@ def alpaca_web_payload(broker, ledger: Ledger) -> dict:
             # and flatten the real ~1.0 curve.
             if e is None or e <= 0:
                 continue
-            dates.append(datetime.fromtimestamp(t, tz=timezone.utc).strftime(fmt))
-            series.append(round(e / base, 6))
-        if series:
-            break
+            out.append((datetime.fromtimestamp(t, tz=timezone.utc).strftime(fmt), round(e / base, 6)))
+        return out
+
+    # Full daily curve since inception, refined with hourly points for the most
+    # recent week (Alpaca caps intraday timeframes at 30-day windows).
+    daily: list[tuple[str, float]] = []
+    if ledger.inception:
+        try:
+            daily = points("%Y-%m-%d", start=f"{ledger.inception}T00:00:00Z",
+                           period=None, timeframe="1D")
+        except RuntimeError as exc:
+            print(f"warning: daily portfolio history unavailable ({exc})")
+    hourly = points("%Y-%m-%d %H:%M", period="1W", timeframe="1H")
+    if hourly:
+        first_hourly_day = hourly[0][0][:10]
+        merged = [p for p in daily if p[0] < first_hourly_day] + hourly
+    else:
+        merged = daily
+    dates = [d for d, _ in merged]
+    series = [v for _, v in merged]
 
     holdings = sorted(
         ({"ticker": t, "weight": round(w, 4)} for t, w in ledger.weights.items()),

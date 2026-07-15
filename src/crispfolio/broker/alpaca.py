@@ -140,12 +140,22 @@ class AlpacaBroker(Broker):
             raise RuntimeError(f"cancel_order returned {r.status_code}: {r.text}")
 
     # -- extras ------------------------------------------------------------- #
-    def get_portfolio_history(self, period: str = "1M", timeframe: str = "1D") -> dict:
-        """Alpaca's own equity time series — feeds the website curve directly."""
+    def get_portfolio_history(self, period: str | None = "1M", timeframe: str = "1D",
+                              start: str | None = None) -> dict:
+        """Alpaca's own equity time series — feeds the website curve directly.
+
+        Alpaca allows at most two of ``start``/``end``/``period``; pass ``start``
+        (RFC3339) with ``period=None`` to get everything since a date.
+        """
+        params: dict[str, str] = {"timeframe": timeframe}
+        if start is not None:
+            params["start"] = start
+        elif period is not None:
+            params["period"] = period
         r = self._session.get(
             f"{self.base}/v2/account/portfolio/history",
             headers=self._headers(),
-            params={"period": period, "timeframe": timeframe},
+            params=params,
             timeout=30,
         )
         if r.status_code != 200:
