@@ -110,6 +110,32 @@ def rebalance(
     current = {sym: pos.qty for sym, pos in acct.positions.items()}
     target = target_positions(weights, nav, prices, allow_short=allow_short)
     orders = diff_to_orders(current, target, prices, min_notional=min_notional)
-    for order in orders:
-        broker.place_order(order)
+    for i, order in enumerate(orders):
+        oid = broker.place_order(order)
+        # A long<->short flip is two orders on the same symbol: close, then
+        # open. The venue rejects the open while the close is still pending --
+        # observed 2026-08-06 when the rebalance flipped XLB and then XLU and
+        # Alpaca 403'd each short leg, leaving the rebalance half done per run.
+        nxt = orders[i + 1] if i + 1 < len(orders) else None
+        if nxt is not None and nxt.symbol == order.symbol:
+            _await_fill(broker, oid)
     return orders
+
+
+def _await_fill(broker: Broker, order_id: str, *, timeout_s: float = 30.0) -> None:
+    """Best-effort wait for a terminal order state before the flip side goes out.
+
+    On timeout or lookup failure we proceed and let the venue reject the second
+    leg -- the prior behaviour, self-healing on the next idempotent run.
+    """
+    import time
+
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        try:
+            status = str(broker.get_order(order_id).get("status", "")).lower()
+        except Exception:
+            return
+        if status in ("filled", "canceled", "cancelled", "rejected", "expired"):
+            return
+        time.sleep(1.0)
