@@ -1,119 +1,89 @@
 {
   "strategy": "crisp",
   "inception": "2026-06-16",
-  "as_of": "2026-08-05 19:30",
+  "as_of": "2026-08-06 17:30",
   "initial_capital": 100000.0,
-  "value": 100649.68,
-  "rebalances": 2,
-  "last_rebalance": "2026-07-13",
+  "value": 100560.6,
+  "rebalances": 3,
+  "last_rebalance": "2026-08-05",
   "cadence_days": 21,
   "holdings": [
     {
       "ticker": "XLE",
-      "weight": 0.1587
+      "weight": 0.1749
     },
     {
       "ticker": "XLV",
-      "weight": 0.1319
+      "weight": 0.1618
     },
     {
       "ticker": "XLK",
-      "weight": 0.1258
-    },
-    {
-      "ticker": "XLU",
-      "weight": 0.0776
-    },
-    {
-      "ticker": "EEM",
-      "weight": 0.0755
-    },
-    {
-      "ticker": "IEF",
-      "weight": 0.0694
-    },
-    {
-      "ticker": "VNQ",
-      "weight": 0.0596
-    },
-    {
-      "ticker": "XLI",
-      "weight": 0.0584
-    },
-    {
-      "ticker": "XLP",
-      "weight": 0.057
-    },
-    {
-      "ticker": "GLD",
-      "weight": 0.025
+      "weight": 0.0975
     },
     {
       "ticker": "EFA",
-      "weight": 0.0237
+      "weight": 0.0691
+    },
+    {
+      "ticker": "VNQ",
+      "weight": 0.0684
+    },
+    {
+      "ticker": "XLP",
+      "weight": 0.068
+    },
+    {
+      "ticker": "EEM",
+      "weight": 0.0598
+    },
+    {
+      "ticker": "XLI",
+      "weight": 0.0596
     },
     {
       "ticker": "XLF",
-      "weight": 0.0097
+      "weight": 0.035
     },
     {
-      "ticker": "TLT",
-      "weight": -0.0252
+      "ticker": "GLD",
+      "weight": 0.0295
     },
     {
       "ticker": "XLB",
-      "weight": -0.0481
+      "weight": 0.0149
+    },
+    {
+      "ticker": "IEF",
+      "weight": 0.007
     },
     {
       "ticker": "XLY",
-      "weight": -0.0543
+      "weight": -0.0366
+    },
+    {
+      "ticker": "XLU",
+      "weight": -0.0455
+    },
+    {
+      "ticker": "TLT",
+      "weight": -0.0725
     }
   ],
   "last_orders": [
     {
-      "symbol": "XLB",
-      "side": "SELL_SHORT",
-      "qty": 94
-    },
-    {
-      "symbol": "XLE",
-      "side": "SELL",
-      "qty": 7
-    },
-    {
-      "symbol": "XLF",
-      "side": "BUY",
-      "qty": 7
-    },
-    {
-      "symbol": "XLI",
-      "side": "SELL",
-      "qty": 10
-    },
-    {
-      "symbol": "XLK",
-      "side": "SELL",
-      "qty": 15
-    },
-    {
-      "symbol": "XLP",
-      "side": "SELL",
-      "qty": 31
-    },
-    {
       "symbol": "XLU",
-      "side": "BUY",
-      "qty": 15
+      "side": "SELL_SHORT",
+      "qty": 104
     },
     {
       "symbol": "XLV",
       "side": "BUY",
-      "qty": 40
+      "qty": 18
     },
     {
       "symbol": "XLY",
-      "side": "SELL_SHORT",
-      "qty": 9
+      "side": "BUY_TO_COVER",
+      "qty": 15
     }
   ],
   "equity": {
@@ -355,7 +325,12 @@
       "2026-08-05 16:30",
       "2026-08-05 17:30",
       "2026-08-05 18:30",
-      "2026-08-05 19:30"
+      "2026-08-05 19:30",
+      "2026-08-06 13:30",
+      "2026-08-06 14:30",
+      "2026-08-06 15:30",
+      "2026-08-06 16:30",
+      "2026-08-06 17:30"
     ],
     "series": [
       1.0,
@@ -595,7 +570,12 @@
       1.007743,
       1.006824,
       1.007982,
-      1.007475
+      1.007475,
+      1.009341,
+      1.006377,
+      1.006303,
+      1.005943,
+      1.004739
     ]
   }
 }
