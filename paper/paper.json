@@ -1,154 +1,159 @@
 {
   "strategy": "crisp",
   "inception": "2026-06-16",
-  "as_of": "2026-10-07 19:30",
+  "as_of": "2026-10-08 18:30",
   "initial_capital": 100000.0,
-  "value": 102681.48,
-  "rebalances": 4,
-  "last_rebalance": "2026-09-03",
+  "value": 102968.28,
+  "rebalances": 5,
+  "last_rebalance": "2026-10-07",
   "cadence_days": 21,
   "holdings": [
     {
-      "ticker": "XLE",
-      "weight": 0.2042
+      "ticker": "XLV",
+      "weight": 0.1404
     },
     {
-      "ticker": "XLV",
-      "weight": 0.1901
+      "ticker": "XLE",
+      "weight": 0.1369
     },
     {
       "ticker": "XLK",
-      "weight": 0.1092
-    },
-    {
-      "ticker": "EFA",
-      "weight": 0.074
-    },
-    {
-      "ticker": "EEM",
-      "weight": 0.0706
+      "weight": 0.1028
     },
     {
       "ticker": "XLP",
-      "weight": 0.0679
+      "weight": 0.088
     },
     {
-      "ticker": "VNQ",
-      "weight": 0.0412
+      "ticker": "EEM",
+      "weight": 0.0518
     },
     {
-      "ticker": "XLF",
-      "weight": 0.0396
-    },
-    {
-      "ticker": "GLD",
-      "weight": 0.027
-    },
-    {
-      "ticker": "XLI",
-      "weight": 0.0225
+      "ticker": "EFA",
+      "weight": 0.0368
     },
     {
       "ticker": "XLB",
-      "weight": 0.0019
+      "weight": 0.0176
+    },
+    {
+      "ticker": "XLI",
+      "weight": 0.0145
+    },
+    {
+      "ticker": "VNQ",
+      "weight": 0.0072
+    },
+    {
+      "ticker": "GLD",
+      "weight": -0.0089
+    },
+    {
+      "ticker": "XLF",
+      "weight": -0.0182
     },
     {
       "ticker": "XLU",
-      "weight": -0.0054
-    },
-    {
-      "ticker": "TLT",
-      "weight": -0.0298
-    },
-    {
-      "ticker": "IEF",
-      "weight": -0.0461
+      "weight": -0.0542
     },
     {
       "ticker": "XLY",
-      "weight": -0.0705
+      "weight": -0.0691
+    },
+    {
+      "ticker": "IEF",
+      "weight": -0.1141
+    },
+    {
+      "ticker": "TLT",
+      "weight": -0.1396
     }
   ],
   "last_orders": [
     {
       "symbol": "EEM",
-      "side": "BUY",
-      "qty": 17
+      "side": "SELL",
+      "qty": 30
     },
     {
       "symbol": "EFA",
-      "side": "BUY",
-      "qty": 6
+      "side": "SELL",
+      "qty": 34
     },
     {
       "symbol": "GLD",
       "side": "SELL",
-      "qty": 1
+      "qty": 6
     },
     {
-      "symbol": "IEF",
-      "side": "SELL",
-      "qty": 7
+      "symbol": "GLD",
+      "side": "SELL_SHORT",
+      "qty": 2
     },
     {
       "symbol": "IEF",
       "side": "SELL_SHORT",
-      "qty": 51
+      "qty": 80
     },
     {
       "symbol": "TLT",
-      "side": "BUY_TO_COVER",
-      "qty": 50
+      "side": "SELL_SHORT",
+      "qty": 148
     },
     {
       "symbol": "VNQ",
       "side": "SELL",
-      "qty": 25
+      "qty": 36
     },
     {
       "symbol": "XLB",
-      "side": "SELL",
-      "qty": 25
+      "side": "BUY",
+      "qty": 33
     },
     {
       "symbol": "XLE",
-      "side": "BUY",
-      "qty": 21
+      "side": "SELL",
+      "qty": 106
     },
     {
       "symbol": "XLF",
-      "side": "BUY",
-      "qty": 10
+      "side": "SELL",
+      "qty": 70
+    },
+    {
+      "symbol": "XLF",
+      "side": "SELL_SHORT",
+      "qty": 34
     },
     {
       "symbol": "XLI",
       "side": "SELL",
-      "qty": 19
+      "qty": 5
     },
     {
       "symbol": "XLK",
-      "side": "BUY",
+      "side": "SELL",
       "qty": 8
     },
     {
       "symbol": "XLP",
       "side": "BUY",
-      "qty": 2
+      "qty": 28
     },
     {
       "symbol": "XLU",
-      "side": "BUY_TO_COVER",
-      "qty": 92
+      "side": "SELL_SHORT",
+      "qty": 123
     },
     {
       "symbol": "XLV",
-      "side": "BUY",
-      "qty": 14
+      "side": "SELL",
+      "qty": 28
     },
     {
       "symbol": "XLY",
       "side": "SELL_SHORT",
-      "qty": 31
+      "qty": 1
     }
   ],
   "equity": {
@@ -698,7 +703,13 @@
       "2026-10-07 16:30",
       "2026-10-07 17:30",
       "2026-10-07 18:30",
-      "2026-10-07 19:30"
+      "2026-10-07 19:30",
+      "2026-10-08 13:30",
+      "2026-10-08 14:30",
+      "2026-10-08 15:30",
+      "2026-10-08 16:30",
+      "2026-10-08 17:30",
+      "2026-10-08 18:30"
     ],
     "series": [
       1.0,
@@ -1246,7 +1257,13 @@
       1.028453,
       1.0278,
       1.027767,
-      1.027342
+      1.027342,
+      1.027556,
+      1.027186,
+      1.02696,
+      1.026969,
+      1.027684,
+      1.028892
     ]
   }
 }
