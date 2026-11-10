@@ -24,41 +24,36 @@
   "slippage_bps": 1.0,
   "min_notional": 0.0,
   "weights": {
-    "XLK": 0.10281114591122466,
-    "XLF": -0.01824139703116916,
-    "XLE": 0.13686096920758997,
-    "XLV": 0.1404429888802635,
-    "XLI": 0.01445019030181065,
-    "XLY": -0.0691285993948684,
-    "XLP": 0.08796026220951726,
-    "XLU": -0.0542073702266344,
-    "XLB": 0.01760748723384039,
-    "TLT": -0.13955222120585722,
-    "IEF": -0.11406350268967297,
-    "GLD": -0.008888746106812076,
-    "EFA": 0.03681351799665661,
-    "EEM": 0.051777397671498145,
-    "VNQ": 0.007194203932584687
+    "XLK": 0.05862728863632638,
+    "XLF": 0.03150400469110567,
+    "XLE": 0.13534199734919242,
+    "XLV": 0.14527589417481743,
+    "XLI": 0.0027608915902502117,
+    "XLY": -0.03475612492024687,
+    "XLP": 0.13048885828509307,
+    "XLU": -0.03372238532545914,
+    "XLB": 0.08061375773941423,
+    "TLT": -0.12551597788437754,
+    "IEF": -0.09509871241167388,
+    "GLD": -0.010577648868793933,
+    "EFA": 0.03950612928645484,
+    "EEM": 0.0262265702670056,
+    "VNQ": 0.04998375856978881
   },
-  "last_date": "2026-11-05",
-  "last_rebalance": "2026-10-07",
-  "days_since_rebalance": 20,
-  "rebalance_count": 5,
+  "last_date": "2026-11-09",
+  "last_rebalance": "2026-11-09",
+  "days_since_rebalance": 0,
+  "rebalance_count": 6,
   "last_orders": [
     {
       "symbol": "EEM",
       "side": "SELL",
-      "qty": 30
+      "qty": 1
     },
     {
       "symbol": "EFA",
-      "side": "SELL",
-      "qty": 34
-    },
-    {
-      "symbol": "GLD",
-      "side": "SELL",
-      "qty": 6
+      "side": "BUY",
+      "qty": 3
     },
     {
       "symbol": "GLD",
@@ -68,67 +63,62 @@
     {
       "symbol": "IEF",
       "side": "SELL_SHORT",
-      "qty": 80
+      "qty": 30
     },
     {
       "symbol": "TLT",
       "side": "SELL_SHORT",
-      "qty": 148
+      "qty": 21
     },
     {
       "symbol": "VNQ",
-      "side": "SELL",
-      "qty": 36
+      "side": "BUY",
+      "qty": 4
     },
     {
       "symbol": "XLB",
-      "side": "BUY",
-      "qty": 33
+      "side": "SELL",
+      "qty": 9
     },
     {
       "symbol": "XLE",
       "side": "SELL",
-      "qty": 106
+      "qty": 18
     },
     {
       "symbol": "XLF",
       "side": "SELL",
-      "qty": 70
-    },
-    {
-      "symbol": "XLF",
-      "side": "SELL_SHORT",
-      "qty": 34
+      "qty": 6
     },
     {
       "symbol": "XLI",
-      "side": "SELL",
-      "qty": 5
+      "side": "BUY",
+      "qty": 1
     },
     {
       "symbol": "XLK",
       "side": "SELL",
-      "qty": 8
+      "qty": 18
     },
     {
       "symbol": "XLP",
       "side": "BUY",
-      "qty": 28
+      "qty": 35
     },
     {
       "symbol": "XLU",
-      "side": "SELL_SHORT",
-      "qty": 123
+      "side": "BUY_TO_COVER",
+      "qty": 58
     },
     {
       "symbol": "XLV",
       "side": "SELL",
-      "qty": 28
+      "qty": 8
     },
     {
       "symbol": "XLY",
-      "side": "SELL_SHORT",
-      "qty": 1
+      "side": "BUY_TO_COVER",
+      "qty": 34
     }
   ],
   "broker_state": null,
@@ -237,7 +227,8 @@
     "2026-10-30",
     "2026-11-03",
     "2026-11-04",
-    "2026-11-05"
+    "2026-11-05",
+    "2026-11-09"
   ],
   "history_equity": [
     0.996429,
@@ -344,7 +335,8 @@
     1.025498,
     1.024069,
     1.004705,
-    1.002876
+    1.002876,
+    1.012697
   ],
   "history_value": [
     99642.93,
@@ -451,6 +443,7 @@
     102549.84,
     102406.9,
     100470.48,
-    100287.61
+    100287.61,
+    101269.74
   ]
 }
