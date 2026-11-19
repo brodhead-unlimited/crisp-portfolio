@@ -115,3 +115,45 @@ def test_equity_tracks_value(src, tickers):
         _run(led, src, as_of=d.strftime("%Y-%m-%d"))
     for v, e in zip(led.history_value, led.history_equity):
         assert e == pytest.approx(v / led.initial_capital, rel=1e-4)
+
+
+@pytest.mark.parametrize("fault", ["missing", "nan", "infinite", "zero", "negative", "duplicate", "unordered", "future", "duplicate_columns", "historical_negative", "historical_nan", "future_time", "ambiguous_time"])
+def test_invalid_universe_or_dates_cannot_fund_or_trade(src, tickers, fault):
+    panel = src._panel.loc[:"2023-01-13"].copy()
+    if fault == "missing":
+        panel = panel.drop(columns=[tickers[-1]])
+    elif fault in ("nan", "infinite", "zero", "negative"):
+        panel.iloc[-1, -1] = {"nan": np.nan, "infinite": np.inf, "zero": 0, "negative": -1}[fault]
+    elif fault == "duplicate":
+        panel = pd.concat([panel, panel.iloc[[-1]]])
+    elif fault == "unordered":
+        panel = panel.iloc[::-1]
+    elif fault == "duplicate_columns":
+        panel = pd.concat([panel.iloc[:, [0]], panel], axis=1)
+    elif fault in ("historical_negative", "historical_nan"):
+        panel.iloc[-3, -1] = -10 if fault == "historical_negative" else np.nan
+    elif fault in ("future_time", "ambiguous_time"):
+        panel.index = panel.index.tz_localize("UTC")
+        panel.index = panel.index[:-1].append(pd.DatetimeIndex(["2023-01-13T23:00Z"]))
+    else:
+        panel.index = panel.index[:-1].append(pd.DatetimeIndex(["2023-01-16"]))
+    source = type("BadSource", (), {"get_prices": lambda *args, **kwargs: PriceData(panel)})()
+    ledger = _new_ledger(tickers)
+    broker = ledger.make_paper_broker()
+    before_ledger, before_broker = ledger.to_json(), broker.to_dict()
+    with pytest.raises(ValueError):
+        step(ledger, broker, source, as_of={"future_time": "2023-01-13T12:00Z",
+            "ambiguous_time": "2023-01-13T12:00"}.get(fault, "2023-01-15"))
+    assert ledger.to_json() == before_ledger
+    assert broker.to_dict() == before_broker
+
+
+def test_backdated_source_cannot_rewind_existing_book(src, tickers):
+    ledger = _new_ledger(tickers)
+    _run(ledger, src, as_of="2023-02-01")
+    broker = ledger.make_paper_broker()
+    before_ledger, before_broker = ledger.to_json(), broker.to_dict()
+    with pytest.raises(ValueError, match="rewind"):
+        step(ledger, broker, src, as_of="2023-01-31")
+    assert ledger.to_json() == before_ledger
+    assert broker.to_dict() == before_broker

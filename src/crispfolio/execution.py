@@ -14,6 +14,7 @@ rebalance through identical code.
 """
 from __future__ import annotations
 
+import math
 import pandas as pd
 
 from .broker.base import Broker, Fill, Order, Side
@@ -106,7 +107,12 @@ def rebalance(
     read back from ``broker.get_account()`` by the caller.
     """
     acct = broker.get_account()
+    for symbol in set(acct.positions) | {s for s, w in weights.items() if w}:
+        if symbol not in prices or not math.isfinite(float(prices[symbol])) or float(prices[symbol]) <= 0:
+            raise ValueError(f"Cannot rebalance with unavailable price for {symbol}")
     nav = acct.market_value(prices)
+    if not math.isfinite(nav) or nav <= 0:
+        raise ValueError("Cannot rebalance with unavailable account value")
     current = {sym: pos.qty for sym, pos in acct.positions.items()}
     target = target_positions(weights, nav, prices, allow_short=allow_short)
     orders = diff_to_orders(current, target, prices, min_notional=min_notional)
@@ -123,19 +129,15 @@ def rebalance(
 
 
 def _await_fill(broker: Broker, order_id: str, *, timeout_s: float = 30.0) -> None:
-    """Best-effort wait for a terminal order state before the flip side goes out.
-
-    On timeout or lookup failure we proceed and let the venue reject the second
-    leg -- the prior behaviour, self-healing on the next idempotent run.
-    """
+    """Require a confirmed complete close before a reversing order can open."""
     import time
 
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        try:
-            status = str(broker.get_order(order_id).get("status", "")).lower()
-        except Exception:
+        status = str(broker.get_order(order_id).get("status", "")).lower()
+        if status == "filled":
             return
-        if status in ("filled", "canceled", "cancelled", "rejected", "expired"):
-            return
+        if status in ("canceled", "cancelled", "rejected", "expired"):
+            raise RuntimeError(f"Close {order_id} was {status}; refusing the opposite opening order")
         time.sleep(1.0)
+    raise TimeoutError(f"Close {order_id} remains unresolved; refusing the opposite opening order")

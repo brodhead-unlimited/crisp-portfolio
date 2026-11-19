@@ -122,30 +122,45 @@ def step(
     anchor = pd.Timestamp(as_of) if as_of else pd.Timestamp.today()
     start = (anchor - pd.Timedelta(days=_fetch_start(ledger.lookback))).strftime("%Y-%m-%d")
     data = source.get_prices(ledger.tickers, start=start, end=as_of)
-    prices = data.prices.dropna(how="any")
-    cols = [t for t in ledger.tickers if t in prices.columns]
-    prices = prices[cols]
-    rets = data.returns("simple")[cols].dropna(how="any")
-
+    cols = list(ledger.tickers)
+    if not cols or len(set(cols)) != len(cols) or not data.prices.columns.is_unique or any(t not in data.prices.columns for t in cols):
+        raise ValueError("complete configured price universe required")
+    prices = data.prices[cols]
+    if not isinstance(prices.index, pd.DatetimeIndex) or prices.index.hasnans or not prices.index.is_unique or not prices.index.is_monotonic_increasing:
+        raise ValueError("price dates must be unique and increasing")
     if len(prices) == 0:
         return False
     latest = prices.index[-1]
+    if latest.date() > anchor.date():
+        raise ValueError("price date exceeds the requested cutoff")
+    if as_of and len(as_of) > 10:
+        if (latest.tzinfo is None) != (anchor.tzinfo is None) or latest > anchor:
+            raise ValueError("price timestamp exceeds or cannot establish the requested cutoff")
+    if not np.isfinite(prices.iloc[-1]).all() or not (prices.iloc[-1] > 0).all():
+        raise ValueError("valid prices required for every configured asset at the latest close")
     latest_str = str(latest.date())
 
+    if ledger.last_date and latest_str < ledger.last_date:
+        raise ValueError("price date would rewind the paper ledger")
     if ledger.last_date == latest_str:        # already recorded this close
         return False
 
+    history = prices.iloc[-ledger.lookback - 1 :]
+    if not np.isfinite(history).all().all() or not (history > 0).all().all():
+        raise ValueError("valid prices required throughout the strategy lookback")
+    rets = history.pct_change(fill_method=None).dropna(how="any")
     if len(rets) < ledger.lookback:
         raise ValueError(
             f"only {len(rets)} return rows; need {ledger.lookback} for lookback."
         )
     window = rets.iloc[-ledger.lookback :]
+    if not np.isfinite(window).all().all():
+        raise ValueError("finite return history required")
     last_prices = prices.iloc[-1]
 
     first_run = ledger.inception is None
     if first_run:
         ledger.inception = latest_str
-        ledger.tickers = cols
 
     if isinstance(broker, PaperBroker):
         if first_run:

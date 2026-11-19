@@ -68,3 +68,85 @@ def test_diff_min_notional_skips_dust(prices):
 
 def test_diff_noop_when_equal(prices):
     assert diff_to_orders({"AAA": 100}, {"AAA": 100}, prices) == []
+
+
+# ---- zero-crossing fill-wait (live incident 2026-08-06: XLB long->short) ---- #
+class _CrossingBroker:
+    """Records order flow; reports 'new' then 'filled' to exercise the wait."""
+
+    def __init__(self):
+        self.placed = []
+        self.polls = []
+        self._n = 0
+
+    def get_account(self):
+        from crispfolio.broker.base import Account, Position
+        return Account(cash=0.0, positions={"XLB": Position("XLB", 94, 40.0)})
+
+    def place_order(self, order):
+        self.placed.append(order)
+        self._n += 1
+        return f"oid-{self._n}"
+
+    def get_order(self, oid):
+        self.polls.append(oid)
+        # first poll: pending; second: filled
+        return {"status": "new"} if self.polls.count(oid) == 1 else {"status": "filled"}
+
+
+def test_rebalance_waits_for_close_before_opening_short(monkeypatch):
+    import pandas as pd
+    from crispfolio.execution import rebalance
+
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    b = _CrossingBroker()
+    px = pd.Series({"XLB": 40.0})
+    # NAV = 94*40 = 3760; weight -0.3 -> target short 28 -> SELL 94 + SELL_SHORT 28
+    orders = rebalance(b, {"XLB": -0.3}, px)
+    assert [(o.side.value, o.qty) for o in orders] == [("SELL", 94), ("SELL_SHORT", 28)]
+    # the close leg (oid-1) was polled to a terminal state before leg 2 went out
+    assert "oid-1" in b.polls
+    # and the non-crossing final order was not waited on
+    assert "oid-2" not in b.polls
+
+
+@pytest.mark.parametrize('status', ['rejected', 'canceled', 'expired'])
+def test_failed_flip_close_never_submits_opposite_open(status):
+    from crispfolio.execution import rebalance
+    broker = _CrossingBroker()
+    broker.get_order = lambda oid: {'status': status}
+    with pytest.raises(RuntimeError, match='refusing'):
+        rebalance(broker, {'XLB': -0.3}, pd.Series({'XLB': 40.0}))
+    assert len(broker.placed) == 1
+
+
+def test_unresolved_flip_close_never_submits_opposite_open(monkeypatch):
+    from crispfolio.execution import rebalance
+    broker = _CrossingBroker()
+    broker.get_order = lambda oid: {'status': 'partially_filled'}
+    tick = iter([0, 0, 31])
+    monkeypatch.setattr('time.monotonic', lambda: next(tick))
+    monkeypatch.setattr('time.sleep', lambda _: None)
+    with pytest.raises(TimeoutError, match='unresolved'):
+        rebalance(broker, {'XLB': -0.3}, pd.Series({'XLB': 40.0}))
+    assert len(broker.placed) == 1
+
+
+@pytest.mark.parametrize('prices', [pd.Series({'OTHER': 40.0}), pd.Series({'XLB': float('nan')}), pd.Series({'XLB': 0.0})])
+def test_unpriced_holding_cannot_become_a_flat_target(prices):
+    from crispfolio.execution import rebalance
+    broker = _CrossingBroker()
+    with pytest.raises(ValueError, match='unavailable price'):
+        rebalance(broker, {}, prices)
+    assert broker.placed == []
+
+
+def test_flip_order_lookup_failure_is_preserved():
+    from crispfolio.execution import rebalance
+    broker = _CrossingBroker()
+    def unavailable(oid):
+        raise ConnectionError('fixture order lookup unavailable')
+    broker.get_order = unavailable
+    with pytest.raises(ConnectionError, match='fixture'):
+        rebalance(broker, {'XLB': -0.3}, pd.Series({'XLB': 40.0}))
+    assert len(broker.placed) == 1
